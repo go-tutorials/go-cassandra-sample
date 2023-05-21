@@ -1,5 +1,5 @@
 server:
-  name: go-cql-rest-api
+  name: go-cassandra-layer-architecture-sample
   port: 8080
 
 cassandra:

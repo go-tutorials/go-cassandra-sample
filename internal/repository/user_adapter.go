@@ -3,7 +3,9 @@ package repository
 import (
 	"context"
 	"fmt"
+	q "github.com/core-go/cassandra"
 	"github.com/gocql/gocql"
+	"reflect"
 	"strings"
 
 	. "go-service/internal/model"
@@ -71,6 +73,23 @@ func (m *UserAdapter) Update(ctx context.Context, user *User) (int64, error) {
 	}
 	query := "update users set username = ?, email = ?, phone = ?, date_of_birth = ? where id = ?"
 	err = session.Query(query, user.Username, user.Email, user.Phone, user.DateOfBirth, user.Id).Exec()
+	if err != nil {
+		return -1, err
+	}
+	return 1, nil
+}
+
+func (m *UserAdapter) Patch(ctx context.Context, user map[string]interface{}) (int64, error) {
+	userType := reflect.TypeOf(User{})
+	jsonColumnMap := q.MakeJsonColumnMap(userType)
+	colMap := q.JSONToColumns(user, jsonColumnMap)
+	keys, _ := q.FindPrimaryKeys(userType)
+	query, args := q.BuildToPatchWithVersion("users", colMap, keys, "")
+	session, err := m.Cluster.CreateSession()
+	if err != nil{
+		return 0, err
+	}
+	err = session.Query(query, args...).Exec()
 	if err != nil {
 		return -1, err
 	}
