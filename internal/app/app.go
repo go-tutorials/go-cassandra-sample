@@ -30,7 +30,7 @@ const (
 
 type ApplicationContext struct {
 	Health *health.Handler
-	User   *handler.UserHandler
+	User   handler.UserPort
 }
 
 func NewApp(ctx context.Context, config Config) (*ApplicationContext, error) {
