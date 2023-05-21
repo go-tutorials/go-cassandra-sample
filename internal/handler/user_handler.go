@@ -4,24 +4,31 @@ import (
 	"context"
 	"encoding/json"
 	"github.com/core-go/core"
+	s "github.com/core-go/search"
 	"github.com/gorilla/mux"
 	"net/http"
 	"reflect"
 
 	. "go-service/internal/model"
-	. "go-service/internal/repository"
+	. "go-service/internal/service"
 )
 
 const InternalServerError = "Internal Server Error"
 
 type UserHandler struct {
-	service  UserRepository
-	Validate func(context.Context, interface{}) ([]core.ErrorMessage, error)
-	LogError func(context.Context, string, ...map[string]interface{})
+	service     UserService
+	Validate    func(context.Context, interface{}) ([]core.ErrorMessage, error)
+	LogError    func(context.Context, string, ...map[string]interface{})
+	search      func(context.Context, interface{}, interface{}, int64, string) (string, error)
+	paramIndex  map[string]int
+	filterIndex int
 }
 
-func NewUserHandler(service UserRepository) *UserHandler {
-	return &UserHandler{service: service}
+func NewUserHandler(search func(context.Context, interface{}, interface{}, int64, string) (string, error), service UserService, validate func(context.Context, interface{}) ([]core.ErrorMessage, error), logError func(context.Context, string, ...map[string]interface{})) *UserHandler {
+	filterType := reflect.TypeOf(UserFilter{})
+	paramIndex := s.BuildParamIndex(filterType)
+	filterIndex := s.FindFilterIndex(filterType)
+	return &UserHandler{service: service, Validate: validate, LogError: logError, search: search, paramIndex: paramIndex, filterIndex: filterIndex}
 }
 
 func (h *UserHandler) All(w http.ResponseWriter, r *http.Request) {
@@ -123,6 +130,18 @@ func (h *UserHandler) Delete(w http.ResponseWriter, r *http.Request) {
 	}
 	status := GetStatus(res)
 	JSON(w, status, res)
+}
+func (h *UserHandler) Search(w http.ResponseWriter, r *http.Request) {
+	filter := UserFilter{Filter: &s.Filter{}}
+	s.Decode(r, &filter, h.paramIndex, h.filterIndex)
+
+	var users []User
+	nextPageToken, err := h.search(r.Context(), &filter, &users, filter.Limit, filter.NextPageToken)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	core.JSON(w, 200, &s.Result{List: &users, NextPageToken: nextPageToken})
 }
 
 func JSON(w http.ResponseWriter, code int, res interface{}) error {
