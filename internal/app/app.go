@@ -8,6 +8,8 @@ import (
 	ch "github.com/core-go/health/cassandra"
 	"github.com/core-go/log"
 	"github.com/core-go/search/cassandra"
+	"github.com/core-go/search/template"
+	"github.com/core-go/search/template/xml"
 	"github.com/gocql/gocql"
 	"reflect"
 	"time"
@@ -74,6 +76,10 @@ func NewApp(ctx context.Context, config Config) (*ApplicationContext, error) {
 		return nil, err
 	}
 
+	templates, err := template.LoadTemplates(xml.Trim, "configs/query.xml")
+	if err != nil {
+		return nil, err
+	}
 	logError := log.LogError
 	validator := v.NewValidator()
 
@@ -83,7 +89,10 @@ func NewApp(ctx context.Context, config Config) (*ApplicationContext, error) {
 	if err != nil {
 		return nil, err
 	}
-	userRepository := repository.NewUserRepository(cluster)
+	userRepository, err := repository.NewUserRepository(cluster, templates)
+	if err != nil {
+		return nil, err
+	}
 	userService := service.NewUserService(userRepository)
 	userHandler := handler.NewUserHandler(userSearchBuilder.Search, userService, validator.Validate, logError)
 

@@ -181,7 +181,7 @@ func (h *UserHandler) Search(w http.ResponseWriter, r *http.Request) {
 	s.Decode(r, &filter, h.paramIndex, h.filterIndex)
 
 	var users []User
-	nextPageToken, err := h.search(r.Context(), &filter, &users, filter.Limit, filter.NextPageToken)
+	users, nextPageToken, err := h.service.Search(r.Context(), &filter)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
