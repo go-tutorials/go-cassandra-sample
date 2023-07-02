@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	q "github.com/core-go/cassandra"
-	"github.com/core-go/search"
 	"github.com/core-go/search/convert"
 	"github.com/core-go/search/template"
 	c "github.com/core-go/search/template/cassandra"
@@ -26,28 +25,26 @@ type UserAdapter struct {
 
 func NewUserRepository(db *gocql.ClusterConfig, templates map[string]*template.Template) (*UserAdapter, error) {
 	userType := reflect.TypeOf(User{})
-	jsonColumnMap := q.MakeJsonColumnMap(userType)
-	keys, _ := q.FindPrimaryKeys(userType)
-	fieldsIndex, err := q.GetColumnIndexes(userType)
+	fieldsIndex, _, jsonColumnMap, keys, _, err := q.Init(userType)
 	if err != nil {
 		return nil, err
 	}
 	return &UserAdapter{Cluster: db, ModelType: userType, JsonColumnMap: jsonColumnMap, Keys: keys, FieldsIndex: fieldsIndex, templates: templates}, nil
 }
 
-func (m *UserAdapter) All(ctx context.Context) (*[]User, error) {
+func (m *UserAdapter) All(ctx context.Context) ([]User, error) {
 	session, err := m.Cluster.CreateSession()
 	if err != nil {
 		return nil, err
 	}
 	query := "select id, username, email, phone, date_of_birth from users"
 	rows := session.Query(query).Iter()
-	var result []User
+	var users []User
 	var user User
 	for rows.Scan(&user.Id, &user.Username, &user.Phone, &user.Email, &user.DateOfBirth) {
-		result = append(result, user)
+		users = append(users, user)
 	}
-	return &result, nil
+	return users, nil
 }
 
 func (m *UserAdapter) Load(ctx context.Context, id string) (*User, error) {
@@ -127,15 +124,8 @@ func (m *UserAdapter) Search(ctx context.Context, filter *UserFilter) ([]User, s
 	if filter.Limit <= 0 {
 		return users, "", nil
 	}
-
-	filter.Sort = q.BuildSort(filter.Sort, m.ModelType)
 	ftr := convert.ToMap(filter, &m.ModelType)
-
 	query, params := c.Build(ftr, *m.templates["user"], q.BuildParam)
-	offset := search.GetOffset(filter.Limit, filter.Page)
-	if offset < 0 {
-		offset = 0
-	}
 	session, err := m.Cluster.CreateSession()
 	if err != nil {
 		return users, "", err
