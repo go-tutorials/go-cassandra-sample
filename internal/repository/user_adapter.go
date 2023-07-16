@@ -20,16 +20,17 @@ type UserAdapter struct {
 	JsonColumnMap map[string]string
 	Keys          []string
 	FieldsIndex   map[string]int
+	Fields        string
 	templates     map[string]*template.Template
 }
 
 func NewUserRepository(db *gocql.ClusterConfig, templates map[string]*template.Template) (*UserAdapter, error) {
 	userType := reflect.TypeOf(User{})
-	fieldsIndex, _, jsonColumnMap, keys, _, err := q.Init(userType)
+	fieldsIndex, _, jsonColumnMap, keys, _, fields, err := q.Init(userType)
 	if err != nil {
 		return nil, err
 	}
-	return &UserAdapter{Cluster: db, ModelType: userType, JsonColumnMap: jsonColumnMap, Keys: keys, FieldsIndex: fieldsIndex, templates: templates}, nil
+	return &UserAdapter{Cluster: db, ModelType: userType, JsonColumnMap: jsonColumnMap, Keys: keys, Fields: fields, FieldsIndex: fieldsIndex, templates: templates}, nil
 }
 
 func (m *UserAdapter) All(ctx context.Context) ([]User, error) {
@@ -124,12 +125,13 @@ func (m *UserAdapter) Search(ctx context.Context, filter *UserFilter) ([]User, s
 	if filter.Limit <= 0 {
 		return users, "", nil
 	}
-	ftr := convert.ToMap(filter, &m.ModelType)
-	query, params := c.Build(ftr, *m.templates["user"], q.BuildParam)
+	ftr := convert.ToMapWithFields(filter, m.Fields, &m.ModelType)
+	query, params := c.Build(ftr, *m.templates["user"])
 	session, err := m.Cluster.CreateSession()
 	if err != nil {
 		return users, "", err
 	}
-	nextPageToken, err := q.QueryWithPage(session, m.FieldsIndex, &users, query, params, int(filter.Limit), filter.NextPageToken)
+	defer session.Close()
+	nextPageToken, err := q.QueryWithPage(session, m.FieldsIndex, &users, filter.Limit, filter.Next, query, params...)
 	return users, nextPageToken, err
 }
