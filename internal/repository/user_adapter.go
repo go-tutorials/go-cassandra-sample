@@ -4,9 +4,8 @@ import (
 	"context"
 	"fmt"
 	q "github.com/core-go/cassandra"
+	"github.com/core-go/cassandra/template"
 	"github.com/core-go/search/convert"
-	"github.com/core-go/search/template"
-	c "github.com/core-go/search/template/cassandra"
 	"github.com/gocql/gocql"
 	"reflect"
 	"strings"
@@ -126,7 +125,7 @@ func (m *UserAdapter) Search(ctx context.Context, filter *UserFilter) ([]User, s
 		return users, "", nil
 	}
 	ftr := convert.ToMapWithFields(filter, m.Fields, &m.ModelType)
-	query, params := c.Build(ftr, *m.templates["user"])
+	query, params := template.Build(ftr, *m.templates["user"])
 	session, err := m.Cluster.CreateSession()
 	if err != nil {
 		return users, "", err
