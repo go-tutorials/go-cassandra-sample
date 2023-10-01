@@ -19,16 +19,18 @@ type UserHandler struct {
 	service     UserService
 	Validate    func(context.Context, interface{}) ([]core.ErrorMessage, error)
 	LogError    func(context.Context, string, ...map[string]interface{})
+	jsonMap     map[string]int
 	search      func(context.Context, interface{}, interface{}, int64, string) (string, error)
 	paramIndex  map[string]int
 	filterIndex int
 }
 
 func NewUserHandler(search func(context.Context, interface{}, interface{}, int64, string) (string, error), service UserService, validate func(context.Context, interface{}) ([]core.ErrorMessage, error), logError func(context.Context, string, ...map[string]interface{})) *UserHandler {
+	userType := reflect.TypeOf(User{})
+	_, jsonMap, _ := core.BuildMapField(userType)
 	filterType := reflect.TypeOf(UserFilter{})
-	paramIndex := s.BuildParamIndex(filterType)
-	filterIndex := s.FindFilterIndex(filterType)
-	return &UserHandler{service: service, Validate: validate, LogError: logError, search: search, paramIndex: paramIndex, filterIndex: filterIndex}
+	paramIndex, filterIndex := s.BuildParams(filterType)
+	return &UserHandler{service: service, Validate: validate, jsonMap: jsonMap, LogError: logError, search: search, paramIndex: paramIndex, filterIndex: filterIndex}
 }
 
 func (h *UserHandler) All(w http.ResponseWriter, r *http.Request) {
@@ -125,8 +127,6 @@ func (h *UserHandler) Patch(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var user User
-	userType := reflect.TypeOf(user)
-	_, jsonMap, _ := core.BuildMapField(userType)
 	body, er1 := core.BuildMapAndStruct(r, &user)
 	if er1 != nil {
 		http.Error(w, er1.Error(), http.StatusInternalServerError)
@@ -138,7 +138,7 @@ func (h *UserHandler) Patch(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Id not match", http.StatusBadRequest)
 		return
 	}
-	json, er2 := core.BodyToJsonMap(r, user, body, []string{"id"}, jsonMap)
+	json, er2 := core.BodyToJsonMap(r, user, body, []string{"id"}, h.jsonMap)
 	if er2 != nil {
 		http.Error(w, er2.Error(), http.StatusInternalServerError)
 		return
@@ -186,7 +186,7 @@ func (h *UserHandler) Search(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
-	core.JSON(w, 200, &s.Result{List: &users, NextPageToken: nextPageToken})
+	core.JSON(w, 200, &s.Result{List: &users, Next: nextPageToken})
 }
 
 func JSON(w http.ResponseWriter, code int, res interface{}) error {
