@@ -5,12 +5,12 @@ go 1.17
 require (
 	github.com/core-go/cassandra v0.0.16
 	github.com/core-go/config v1.0.1
-	github.com/core-go/core v0.3.8
+	github.com/core-go/core v0.6.4
 	github.com/core-go/health v1.0.0
-	github.com/core-go/log v1.0.0
-	github.com/core-go/search v1.0.1
+	github.com/core-go/log v1.0.2
+	github.com/core-go/search v1.0.2
 	github.com/gocql/gocql v1.6.0
-	github.com/gorilla/mux v1.8.0
+	github.com/gorilla/mux v1.8.1
 )
 
 require (

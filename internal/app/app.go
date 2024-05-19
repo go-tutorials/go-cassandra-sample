@@ -2,20 +2,14 @@ package app
 
 import (
 	"context"
-	"github.com/core-go/cassandra"
-	v "github.com/core-go/core/v10"
+	"time"
+
 	"github.com/core-go/health"
 	ch "github.com/core-go/health/cassandra"
 	"github.com/core-go/log"
-	"github.com/core-go/search/cassandra"
 	"github.com/gocql/gocql"
-	"reflect"
-	"time"
 
-	"go-service/internal/handler"
-	"go-service/internal/model"
-	"go-service/internal/repository"
-	"go-service/internal/service"
+	"go-service/internal/user"
 )
 
 const (
@@ -36,7 +30,7 @@ const (
 
 type ApplicationContext struct {
 	Health *health.Handler
-	User   handler.UserPort
+	User   user.UserTransport
 }
 
 func NewApp(ctx context.Context, config Config) (*ApplicationContext, error) {
@@ -75,20 +69,11 @@ func NewApp(ctx context.Context, config Config) (*ApplicationContext, error) {
 	}
 
 	logError := log.LogError
-	validator, err := v.NewValidator()
-	if err != nil {
-		return nil, err
-	}
 
-	userType := reflect.TypeOf(model.User{})
-	userQuery := query.NewBuilder("users", userType)
-	userSearchBuilder, err := cassandra.NewSearchBuilder(cluster, userType, userQuery.BuildQuery)
+	userHandler, err := user.NewUserHandler(cluster, logError)
 	if err != nil {
 		return nil, err
 	}
-	userRepository := repository.NewUserRepository(cluster)
-	userService := service.NewUserService(userRepository)
-	userHandler := handler.NewUserHandler(userSearchBuilder.Search, userService, validator.Validate, logError)
 
 	cqlChecker := ch.NewHealthChecker(cluster)
 	healthHandler := health.NewHandler(cqlChecker)
