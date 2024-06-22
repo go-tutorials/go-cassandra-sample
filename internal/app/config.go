@@ -2,8 +2,8 @@ package app
 
 import (
 	"github.com/core-go/core"
-	"github.com/core-go/log"
 	mid "github.com/core-go/log/middleware"
+	"github.com/core-go/log/zap"
 )
 
 type Config struct {
@@ -14,7 +14,7 @@ type Config struct {
 }
 
 type Cassandra struct {
-	PublicIp	string	`mapstructure:"public_ip"`
-	UserName	string	`mapstructure:"user_name"`
-	Password	string	`mapstructure:"password"`
+	PublicIp string `mapstructure:"public_ip"`
+	UserName string `mapstructure:"user_name"`
+	Password string `mapstructure:"password"`
 }

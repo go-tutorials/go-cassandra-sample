@@ -6,7 +6,7 @@ import (
 
 	"github.com/core-go/health"
 	ch "github.com/core-go/health/cassandra"
-	"github.com/core-go/log"
+	"github.com/core-go/log/zap"
 	"github.com/gocql/gocql"
 
 	"go-service/internal/user"
@@ -33,14 +33,14 @@ type ApplicationContext struct {
 	User   user.UserTransport
 }
 
-func NewApp(ctx context.Context, config Config) (*ApplicationContext, error) {
+func NewApp(ctx context.Context, cfg Config) (*ApplicationContext, error) {
 	// connect to the cluster
-	cluster := gocql.NewCluster(config.Cql.PublicIp)
+	cluster := gocql.NewCluster(cfg.Cql.PublicIp)
 	cluster.Consistency = gocql.Quorum
 	cluster.ProtoVersion = 4
 	cluster.Timeout = time.Second * 1000
 	cluster.ConnectTimeout = time.Second * 1000
-	cluster.Authenticator = gocql.PasswordAuthenticator{Username: config.Cql.UserName, Password: config.Cql.Password}
+	cluster.Authenticator = gocql.PasswordAuthenticator{Username: cfg.Cql.UserName, Password: cfg.Cql.Password}
 	session, err := cluster.CreateSession()
 	if err != nil {
 		return nil, err
