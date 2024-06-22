@@ -13,31 +13,36 @@ import (
 )
 
 type UserAdapter struct {
-	Cluster *gocql.ClusterConfig
+	Cluster       *gocql.ClusterConfig
+	Keys          []string
+	JsonColumnMap map[string]string
 }
 
 func NewUserRepository(db *gocql.ClusterConfig) *UserAdapter {
-	return &UserAdapter{Cluster: db}
+	userType := reflect.TypeOf(model.User{})
+	jsonColumnMap := q.MakeJsonColumnMap(userType)
+	keys, _ := q.FindPrimaryKeys(userType)
+	return &UserAdapter{Cluster: db, Keys: keys, JsonColumnMap: jsonColumnMap}
 }
 
-func (m *UserAdapter) All(ctx context.Context) (*[]model.User, error) {
-	session, err := m.Cluster.CreateSession()
-	if err != nil{
+func (a *UserAdapter) All(ctx context.Context) (*[]model.User, error) {
+	session, err := a.Cluster.CreateSession()
+	if err != nil {
 		return nil, err
 	}
 	query := "select id, username, email, phone, date_of_birth from users"
 	rows := session.Query(query).Iter()
-	var result []model.User
+	var users []model.User
 	var user model.User
 	for rows.Scan(&user.Id, &user.Username, &user.Phone, &user.Email, &user.DateOfBirth) {
-		result = append(result, user)
+		users = append(users, user)
 	}
-	return &result, nil
+	return &users, nil
 }
 
-func (m *UserAdapter) Load(ctx context.Context, id string) (*model.User, error) {
-	session, err := m.Cluster.CreateSession()
-	if err != nil{
+func (a *UserAdapter) Load(ctx context.Context, id string) (*model.User, error) {
+	session, err := a.Cluster.CreateSession()
+	if err != nil {
 		return nil, err
 	}
 	var user model.User
@@ -54,9 +59,9 @@ func (m *UserAdapter) Load(ctx context.Context, id string) (*model.User, error) 
 	return &user, nil
 }
 
-func (m *UserAdapter) Create(ctx context.Context, user *model.User) (int64, error) {
-	session, err := m.Cluster.CreateSession()
-	if err != nil{
+func (a *UserAdapter) Create(ctx context.Context, user *model.User) (int64, error) {
+	session, err := a.Cluster.CreateSession()
+	if err != nil {
 		return 0, err
 	}
 	query := "insert into users (id, username, email, phone, date_of_birth) values (?, ?, ?, ?, ?)"
@@ -67,9 +72,9 @@ func (m *UserAdapter) Create(ctx context.Context, user *model.User) (int64, erro
 	return 1, nil
 }
 
-func (m *UserAdapter) Update(ctx context.Context, user *model.User) (int64, error) {
-	session, err := m.Cluster.CreateSession()
-	if err != nil{
+func (a *UserAdapter) Update(ctx context.Context, user *model.User) (int64, error) {
+	session, err := a.Cluster.CreateSession()
+	if err != nil {
 		return 0, err
 	}
 	query := "update users set username = ?, email = ?, phone = ?, date_of_birth = ? where id = ?"
@@ -80,14 +85,11 @@ func (m *UserAdapter) Update(ctx context.Context, user *model.User) (int64, erro
 	return 1, nil
 }
 
-func (m *UserAdapter) Patch(ctx context.Context, user map[string]interface{}) (int64, error) {
-	userType := reflect.TypeOf(model.User{})
-	jsonColumnMap := q.MakeJsonColumnMap(userType)
-	colMap := q.JSONToColumns(user, jsonColumnMap)
-	keys, _ := q.FindPrimaryKeys(userType)
-	query, args := q.BuildToPatchWithVersion("users", colMap, keys, "")
-	session, err := m.Cluster.CreateSession()
-	if err != nil{
+func (a *UserAdapter) Patch(ctx context.Context, user map[string]interface{}) (int64, error) {
+	colMap := q.JSONToColumns(user, a.JsonColumnMap)
+	query, args := q.BuildToPatch("users", colMap, a.Keys)
+	session, err := a.Cluster.CreateSession()
+	if err != nil {
 		return 0, err
 	}
 	err = session.Query(query, args...).Exec()
@@ -97,9 +99,9 @@ func (m *UserAdapter) Patch(ctx context.Context, user map[string]interface{}) (i
 	return 1, nil
 }
 
-func (m *UserAdapter) Delete(ctx context.Context, id string) (int64, error) {
-	session, err := m.Cluster.CreateSession()
-	if err != nil{
+func (a *UserAdapter) Delete(ctx context.Context, id string) (int64, error) {
+	session, err := a.Cluster.CreateSession()
+	if err != nil {
 		return 0, err
 	}
 	query := "delete from users where id = ?"
