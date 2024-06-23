@@ -3,7 +3,7 @@ module go-service
 go 1.19
 
 require (
-	github.com/core-go/cassandra v0.1.3
+	github.com/core-go/cassandra v0.1.4
 	github.com/core-go/config v1.0.1
 	github.com/core-go/core v0.6.5
 	github.com/core-go/health v1.0.0

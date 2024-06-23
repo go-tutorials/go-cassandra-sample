@@ -2,8 +2,8 @@ github.com/bitly/go-hostpool v0.0.0-20171023180738-a3a6125de932 h1:mXoPYz/Ul5HYE
 github.com/bitly/go-hostpool v0.0.0-20171023180738-a3a6125de932/go.mod h1:NOuUCSz6Q9T7+igc/hlvDOUdtWKryOrtFyIVABv/p7k=
 github.com/bmizerany/assert v0.0.0-20160611221934-b7ed37b82869 h1:DDGfHa7BWjL4YnC6+E63dPcxHo2sUxDIu8g3QgEJdRY=
 github.com/bmizerany/assert v0.0.0-20160611221934-b7ed37b82869/go.mod h1:Ekp36dRnpXw/yCqJaO+ZrUyxD+3VXMFFr56k5XYrpB4=
-github.com/core-go/cassandra v0.1.3 h1:5nicim9qS9BX8tECcgjHYTXIS/9DoAgyhzUDVfEttvA=
-github.com/core-go/cassandra v0.1.3/go.mod h1:dOwyRp8nSrOGdydc/Gw7Q+AJfaNbJDfGxwILwOA908s=
+github.com/core-go/cassandra v0.1.4 h1:cRJmWSLy+nH+KPAIHrQavh9Ff6Ddlvo03D1lxN+Xgmo=
+github.com/core-go/cassandra v0.1.4/go.mod h1:dOwyRp8nSrOGdydc/Gw7Q+AJfaNbJDfGxwILwOA908s=
 github.com/core-go/config v1.0.1 h1:ZIfpd+rfyajyePVxe7IKwGtgcJZ7lsbewTzVgfgMZMk=
 github.com/core-go/config v1.0.1/go.mod h1:fHfbCGBNq6FMQneRMtDg8tkTwut3KmmYxcjgbW37+As=
 github.com/core-go/core v0.6.5 h1:RKBQh32mUNH0ha+EAWx3jf5DhOKzKCE53CtfgWczDyA=
