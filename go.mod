@@ -1,6 +1,6 @@
 module go-service
 
-go 1.19
+go 1.17
 
 require (
 	github.com/core-go/cassandra v0.1.4

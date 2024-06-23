@@ -15,7 +15,7 @@ type UserUsecase struct {
 	repository repository.UserRepository
 }
 
-func (s *UserUsecase) All(ctx context.Context) (*[]model.User, error) {
+func (s *UserUsecase) All(ctx context.Context) ([]model.User, error) {
 	return s.repository.All(ctx)
 }
 func (s *UserUsecase) Load(ctx context.Context, id string) (*model.User, error) {

@@ -25,7 +25,7 @@ func NewUserRepository(db *gocql.ClusterConfig) *UserAdapter {
 	return &UserAdapter{Cluster: db, Keys: keys, JsonColumnMap: jsonColumnMap}
 }
 
-func (a *UserAdapter) All(ctx context.Context) (*[]model.User, error) {
+func (a *UserAdapter) All(ctx context.Context) ([]model.User, error) {
 	session, err := a.Cluster.CreateSession()
 	if err != nil {
 		return nil, err
@@ -37,7 +37,7 @@ func (a *UserAdapter) All(ctx context.Context) (*[]model.User, error) {
 	for rows.Scan(&user.Id, &user.Username, &user.Phone, &user.Email, &user.DateOfBirth) {
 		users = append(users, user)
 	}
-	return &users, nil
+	return users, nil
 }
 
 func (a *UserAdapter) Load(ctx context.Context, id string) (*model.User, error) {
