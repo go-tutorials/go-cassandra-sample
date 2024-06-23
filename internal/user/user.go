@@ -6,13 +6,13 @@ import (
 	"reflect"
 
 	"github.com/core-go/cassandra"
+	"github.com/core-go/cassandra/adapter"
 	v "github.com/core-go/core/v10"
 	"github.com/core-go/search/cassandra/query"
 	"github.com/gocql/gocql"
 
 	"go-service/internal/user/handler"
 	"go-service/internal/user/model"
-	"go-service/internal/user/repository"
 	"go-service/internal/user/service"
 )
 
@@ -26,7 +26,7 @@ type UserTransport interface {
 	Delete(w http.ResponseWriter, r *http.Request)
 }
 
-func NewUserHandler(cluster *gocql.ClusterConfig, logError func(context.Context, string, ...map[string]interface{})) (UserTransport,error) {
+func NewUserHandler(cluster *gocql.ClusterConfig, logError func(context.Context, string, ...map[string]interface{})) (UserTransport, error) {
 	validator, err := v.NewValidator()
 	if err != nil {
 		return nil, err
@@ -38,7 +38,11 @@ func NewUserHandler(cluster *gocql.ClusterConfig, logError func(context.Context,
 	if err != nil {
 		return nil, err
 	}
-	userRepository := repository.NewUserRepository(cluster)
+	// userRepository := repository.NewUserRepository(cluster)
+	userRepository, err := adapter.NewGenericAdapter[model.User, string](cluster, "users")
+	if err != nil {
+		return nil, err
+	}
 	userService := service.NewUserService(userRepository)
 	userHandler := handler.NewUserHandler(userSearchBuilder.Search, userService, validator.Validate, logError)
 	return userHandler, nil
