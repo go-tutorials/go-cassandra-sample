@@ -6,7 +6,7 @@ import (
 	"net/http"
 
 	"github.com/core-go/config"
-	"github.com/core-go/core"
+	svr "github.com/core-go/core/server"
 	mid "github.com/core-go/log/middleware"
 	"github.com/core-go/log/zap"
 	"github.com/gorilla/mux"
@@ -35,8 +35,8 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
-	fmt.Println(core.ServerInfo(cfg.Server))
-	if err = http.ListenAndServe(core.Addr(cfg.Server.Port), r); err != nil {
+	fmt.Println(svr.ServerInfo(cfg.Server))
+	if err = http.ListenAndServe(svr.Addr(cfg.Server.Port), r); err != nil {
 		fmt.Println(err.Error())
 	}
 }

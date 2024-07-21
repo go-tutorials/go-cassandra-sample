@@ -1,10 +1,10 @@
-# go-cassandra-layer-architecture-sample
+# go-cassandra-sample
 
 ## How to run
 #### Clone the repository
 ```shell
-git clone https://github.com/go-tutorials/go-cassandra-layer-architecture-sample.git
-cd go-cassandra-layer-architecture-sample
+git clone https://github.com/go-tutorials/go-cassandra-sample.git
+cd go-cassandra-sample
 ```
 
 #### To run the application
